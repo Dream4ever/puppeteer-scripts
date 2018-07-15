@@ -11,5 +11,8 @@
     "automation"
   ],
   "author": "HeWei",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "puppeteer": "^1.5.0"
+  }
 }
