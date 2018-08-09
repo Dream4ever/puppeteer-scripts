@@ -3,49 +3,52 @@ var config = require('./config/config');
 
 (async () => {
 
-  var browser = await puppeteer.launch();
-  console.log(`\nbrowser launched`);
+  var browser = await puppeteer.launch({
+    // headless: false,
+  });
+  console.log(`\n浏览器已启动`);
 
   var page = await browser.newPage();
-  console.log(`page opened`);
+  console.log(`标签已新建\n`);
 
-  for (var index = config.startIndex; index < config.startIndex + config.count; index++) {
+  var urls = [];
 
-    console.log(`\ncurrent index: ${index}`);
-    const finalUrl = `${config.baseUrl}${index}.html`;
-    const finalImg = `./img/${index}.png`;
-
-    await page.goto('https://cli.im/url');
-    await page.setViewport({
-      width: 1920,
-      height: 935,
+  if (config.array && config.array.length > 0) {
+    config.array.forEach(ele => {
+      urls.push(`${config.baseUrl}${ele}.html`);
     });
 
-    await page.waitForSelector('#url_content');
-    console.log('01. page rendered');
-    await page.type(
-      '#url_content',
-      finalUrl, {
-        delay: 50,
-      }
-    );
+    for (var idx = 0; idx < urls.length; idx++) {
+      await page.setViewport({
+        width: 1920,
+        height: 935,
+      });
+      await page.goto('https://cli.im/url');
 
-    await page.waitForSelector('#click-create');
-    await page.click('#click-create', {
-      delay: 50,
-    });
-    console.log('02. button clicked');
+      await page.waitForSelector('#url_content');
+      console.log('01. 页面加载完毕');
+      await page.type(
+        '#url_content',
+        urls[idx], {
+          delay: 50,
+        }
+      );
 
-    await page.waitForNavigation();
+      await page.waitForSelector('#click-create');
+      await page.click('#click-create');
+      console.log('02. 二维码图片生成中');
 
-    var qrcode = await page.$('#qrimage');
-    console.log('03. qrcode rendered');
-    await qrcode.screenshot({
-      path: finalImg,
-    });
-    console.log(`04. image ${index} saved`);
+      await page.waitForNavigation();
+
+      var qrcode = await page.$('#qrimage');
+      console.log('03. 二维码图片已生成');
+      await qrcode.screenshot({
+        path: `img/${config.array[idx]}.png`,
+      });
+      console.log(`04. 图片 ${config.array[idx]} 已保存\n`);
+    };
   }
 
   await browser.close();
-  console.log(`\npage closed`);
+  console.log(`\n浏览器已关闭`);
 })();
