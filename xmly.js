@@ -27,7 +27,6 @@ var fs = require('fs');
   const pageCount = parseInt(await page.evaluate(pageIndex => pageIndex.innerHTML, pageHandle));
   await pageHandle.dispose();
 
-  var result = [];
   var line = '';
   var totalCount = 0;
 
