@@ -17,37 +17,50 @@ var config = require('./config/config');
     config.array.forEach(ele => {
       urls.push(`${config.baseUrl}${ele}.html`);
     });
+  } else if (config.startIndex) {
+    for (var i = config.startIndex; i <= config.count; i++) {
+      urls.push(`${config.baseUrl}${i}.html`);
+    }
+  }
 
-    for (var idx = 0; idx < urls.length; idx++) {
-      await page.setViewport({
-        width: 1920,
-        height: 935,
-      });
-      await page.goto('https://cli.im/url');
+  for (var idx = 0; idx < urls.length; idx++) {
+    await page.setViewport({
+      width: 1920,
+      height: 935,
+    });
+    await page.goto('https://cli.im/url');
 
-      await page.waitForSelector('#url_content');
-      console.log('01. 页面加载完毕');
-      await page.type(
-        '#url_content',
-        urls[idx], {
-          delay: 50,
-        }
-      );
+    await page.waitForSelector('#url_content');
+    console.log('01. 页面加载完毕');
+    await page.type(
+      '#url_content',
+      urls[idx], {
+        delay: 50,
+      }
+    );
 
-      await page.waitForSelector('#click-create');
-      await page.click('#click-create');
-      console.log('02. 二维码图片生成中');
+    await page.waitForSelector('#click-create');
+    await page.click('#click-create');
+    console.log('02. 二维码图片生成中');
 
-      await page.waitForNavigation();
+    await page.waitForNavigation();
 
-      var qrcode = await page.$('#qrimage');
-      console.log('03. 二维码图片已生成');
+    var qrcode = await page.$('#qrimage');
+    console.log('03. 二维码图片已生成');
+
+    if (config.array && config.array.length > 0) {
       await qrcode.screenshot({
         path: `img/${config.array[idx]}.png`,
       });
       console.log(`04. 图片 ${config.array[idx]} 已保存\n`);
-    };
-  }
+
+    } else if (config.startIndex) {
+      await qrcode.screenshot({
+        path: `img/${config.startIndex + idx}.png`,
+      });
+      console.log(`04. 图片 ${config.startIndex + idx} 已保存\n`);
+    }
+  };
 
   await browser.close();
   console.log(`\n浏览器已关闭`);
