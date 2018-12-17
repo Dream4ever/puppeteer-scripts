@@ -64,6 +64,34 @@ var config = require('./config/config');
     }
   };
 
+  // 检查二维码
+  await page.goto('https://hewei.in/decode-qrcode/', {
+    waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
+  });
+  console.log('页面已完全加载');
+
+  for (var idx = 0; idx < urls.length; idx++) {
+
+    await page.waitForSelector('input#upload');
+    const input = await page.waitForSelector('input#upload');
+    let fileName = config.array ? config.array[idx] : (config.startIndex + idx);
+    await input.uploadFile('img/' + fileName + '.png');
+    await page.waitForSelector('#decode');
+    await page.click('#decode');
+
+    await page.waitForSelector('#result');
+    const innerText = await page.evaluate(() => document.querySelector('#result').innerText);
+    if (innerText !== urls[idx]) {
+      console.log('二维码图片内容有误');
+      console.log(`报错信息：${innerText}`);
+      console.log(`正确网址：${urls[idx]}`);
+      console.log('请为上面的网址重新生成二维码图片并再次检查');
+      console.log('\n');
+    }
+  }
+  console.log('二维码图片全部检查完毕');
+
   await browser.close();
   console.log(`\n浏览器已关闭`);
+
 })();
