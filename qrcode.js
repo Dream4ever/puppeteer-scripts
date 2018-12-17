@@ -5,11 +5,13 @@ var config = require('./config/config');
 
   var browser = await puppeteer.launch({
     // headless: false,
+    // devtools: true,
+    // slowMo: 250,
   });
-  console.log(`\n浏览器已启动`);
+  console.log(`\n已启动浏览器`);
 
   var page = await browser.newPage();
-  console.log(`标签已新建\n`);
+  console.log(`已新建标签页\n`);
 
   var urls = [];
 
@@ -52,13 +54,13 @@ var config = require('./config/config');
       await qrcode.screenshot({
         path: `img/${config.array[idx]}.png`,
       });
-      console.log(`04. 图片 ${config.array[idx]} 已保存\n`);
+      console.log(`04. 二维码图片 ${config.array[idx]} 已保存\n`);
 
     } else if (config.startIndex) {
       await qrcode.screenshot({
         path: `img/${config.startIndex + idx}.png`,
       });
-      console.log(`04. 图片 ${config.startIndex + idx} 已保存\n`);
+      console.log(`04. 二维码图片 ${config.startIndex + idx} 已保存\n`);
     }
   };
 
