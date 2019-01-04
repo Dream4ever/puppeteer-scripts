@@ -8,7 +8,7 @@ var config = require('./config/config');
     // devtools: true,
     // slowMo: 250,
   });
-  console.log(`\n已启动浏览器`);
+  console.log(`\n已启动浏览器\n`);
 
   var page = await browser.newPage();
   console.log(`已新建标签页\n`);
@@ -24,12 +24,13 @@ var config = require('./config/config');
       urls.push(`${config.baseUrl}${i}.html`);
     }
   }
+  
+  await page.setViewport({
+    width: 1920,
+    height: 935,
+  });
 
   for (var idx = 0; idx < urls.length; idx++) {
-    await page.setViewport({
-      width: 1920,
-      height: 935,
-    });
     await page.goto('https://cli.im/url');
 
     await page.waitForSelector('#url_content');
@@ -68,7 +69,7 @@ var config = require('./config/config');
   await page.goto('https://hewei.in/decode-qrcode/', {
     waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
   });
-  console.log('页面已完全加载');
+  console.log('页面已完全加载\n');
 
   for (var idx = 0; idx < urls.length; idx++) {
 
@@ -89,7 +90,7 @@ var config = require('./config/config');
       console.log('\n');
     }
   }
-  console.log('二维码图片全部检查完毕');
+  console.log('二维码图片全部检查完毕，图片全部正常可用 :)');
 
   await browser.close();
   console.log(`\n浏览器已关闭`);
