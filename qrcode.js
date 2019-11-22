@@ -50,11 +50,13 @@ var config = require('./config/config');
     }
   }
 
+  /* 逐个生成二维码 */
   for (var idx = 0; idx < urls.length; idx++) {
     await page.goto('https://cli.im/url');
 
     await page.waitForSelector('#url_content');
     console.log('01. 页面加载完毕');
+
     // 草料网现在增加了检测机制，必须点击输入框之后才能模拟输入文字
     await page.tap('#url_content');
     await page.type('#url_content', urls[idx], { delay: 50, }
@@ -62,14 +64,15 @@ var config = require('./config/config');
 
     await page.waitForSelector('#click-create');
     await page.click('#click-create');
+
     // 输入网址生成二维码图片后，URL会变化，所以这一行不能省略
     await page.waitForNavigation();
 
+    // 设置二维码容错级别为最低的7%
     await page.waitForSelector('li.col-md-3.col-sm-3.col-xs-3.first');
     await page.click('li.col-md-3.col-sm-3.col-xs-3.first');
     await page.waitForSelector('div#level')
     await page.click('div#level')
-
     await page.waitForSelector('a.dropdown-item[data-level="L"]')
     await page.click('a.dropdown-item[data-level="L"]')
 
@@ -116,7 +119,7 @@ var config = require('./config/config');
     // ])
     await fileChooser.accept([`img/${config.startIndex + idx}.png`]);
     // console.log(2)
-    
+
     // await page.waitForFunction("document.querySelector('#deqrresult').innerText.length > 0")
     // console.log(3)
 
