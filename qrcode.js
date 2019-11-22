@@ -95,6 +95,7 @@ var config = require('./config/config');
       });
       console.log(`04. 二维码图片 ${config.startIndex + idx} 已保存\n`);
     }
+    await page.waitFor(1000);
   };
 
 
@@ -106,25 +107,16 @@ var config = require('./config/config');
 
   let allOK = true;
   for (var idx = 0; idx < urls.length; idx++) {
-    // console.log(1)
     await page.waitForSelector('input#filedatacode');
     const [fileChooser] = await Promise.all([
       page.waitForFileChooser(),
       page.click('input#filedatacode'),
     ]);
-    // await Promise.all([
-    //   page.waitForFunction("document.querySelector('#deqrresult').innerText.length > 0"),
-    //   page.waitFor(1000),
-    //   fileChooser.accept([`img/${config.startIndex + idx}.png`])
-    // ])
+    await page.waitFor(2000);
     await fileChooser.accept([`img/${config.startIndex + idx}.png`]);
-    // console.log(2)
-
-    // await page.waitForFunction("document.querySelector('#deqrresult').innerText.length > 0")
-    // console.log(3)
+    await page.waitFor(2000);
 
     const innerText = await page.evaluate(() => document.querySelector('#deqrresult').innerText);
-    // console.log(4)
 
     if (innerText !== urls[idx]) {
       allOK = false;
