@@ -66,6 +66,9 @@ var config = require('./config/config');
   };
 
   // 检查二维码
+  // TODO
+  // 试试下面的这个API
+  // https://pptr.dev/#?product=Puppeteer&version=v1.19.0&show=api-class-filechooser
   await page.goto('https://hewei.in/decode-qrcode/', {
     waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
   });
