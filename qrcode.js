@@ -2,20 +2,13 @@ var fs = require('fs');
 var puppeteer = require('puppeteer');
 var config = require('./config/config');
 
-/*
-  TODO
-  目前生成二维码的代码没有问题
-  检查二维码的代码有问题
-  时不时地会出现已经上传新的二维码图片了
-  但代码读取到的二维码URL还是前一个图片的
-  然后就会报错，很闹心
-*/
 (async () => {
 
   /* 设置浏览器启动参数 */
   const width = 1920;
   const height = 935;
   const chrome = { x: 0, y: 74 };
+
   // 设置启动后的窗口尺寸
   // https://github.com/GoogleChrome/puppeteer/issues/1183
   let args = [];
@@ -27,6 +20,7 @@ var config = require('./config/config');
     // devtools: true,
     // slowMo: 250,
   });
+
   console.log(`\n已启动浏览器\n`);
 
 
@@ -82,6 +76,8 @@ var config = require('./config/config');
     var qrcode = await page.$('#qrimage');
     console.log('03. 二维码图片已生成');
 
+    // 在这里需等待1秒，才能正常获取到图片元素的src
+    // 否则获取到的是图片的base64值
     await page.waitFor(1000);
     let imgSrc = await page.evaluate(() => {
       return document.querySelector('#qrimage').getAttribute('src')
