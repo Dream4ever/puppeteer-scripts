@@ -1,3 +1,4 @@
+var fs = require('fs');
 var puppeteer = require('puppeteer');
 var config = require('./config/config');
 
@@ -21,7 +22,7 @@ var config = require('./config/config');
   args.push(`--window-size=${width + chrome.x},${height + chrome.y}`);
 
   var browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     args,
     // devtools: true,
     // slowMo: 250,
@@ -81,18 +82,30 @@ var config = require('./config/config');
     var qrcode = await page.$('#qrimage');
     console.log('03. 二维码图片已生成');
 
+    await page.waitFor(1000);
+    let imgSrc = await page.evaluate(() => {
+      return document.querySelector('#qrimage').getAttribute('src')
+    });
+    await page.waitFor(1000);
+    console.log(imgSrc);
+    let viewSource = await page.goto(`https:${imgSrc}`);
+
     // 二维码图片非连续编号
     if (config.array && config.array.length > 0) {
-      await qrcode.screenshot({
-        path: `img/${config.array[idx]}.png`,
-      });
+      fs.writeFile(`img/${config.startIndex + idx}.png`, await viewSource.buffer(), function (err) {
+        if (err) {
+          return console.log(err);
+        }
+      })
       console.log(`04. 二维码图片 ${config.array[idx]} 已保存\n`);
     }
     // 二维码图片连续编号
     else if (config.startIndex) {
-      await qrcode.screenshot({
-        path: `img/${config.startIndex + idx}.png`,
-      });
+      fs.writeFile(`img/${config.startIndex + idx}.png`, await viewSource.buffer(), function (err) {
+        if (err) {
+          return console.log(err);
+        }
+      })
       console.log(`04. 二维码图片 ${config.startIndex + idx} 已保存\n`);
     }
     await page.waitFor(1000);
