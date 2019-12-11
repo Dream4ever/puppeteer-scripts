@@ -98,15 +98,16 @@ var config = require('./config/config');
     await page.waitFor(1000);
   };
 
-
   // 检查二维码
   await page.goto('https://cli.im/deqr', {
     waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
   });
-  console.log('页面已完全加载\n');
+  console.log('二维码扫描页面已完全加载\n');
 
   let allOK = true;
   for (var idx = 0; idx < urls.length; idx++) {
+    console.log(`第${idx + 1}个二维码检查中……\n`);
+
     await page.waitForSelector('input#filedatacode');
     const [fileChooser] = await Promise.all([
       page.waitForFileChooser(),
@@ -129,7 +130,7 @@ var config = require('./config/config');
   }
   console.log('二维码图片全部检查完毕');
   if (allOK) {
-    console.log('图片全部正常可用 :)')
+    console.log('二维码图片全部正常可用 :)')
   }
 
   await browser.close();
