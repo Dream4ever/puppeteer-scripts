@@ -40,8 +40,8 @@ var config = require('./config/config');
       urls.push(`${config.baseUrl}${ele}.html`);
     });
   } else if (config.startIndex) {
-    for (var i = config.startIndex; i <= config.count; i++) {
-      urls.push(`${config.baseUrl}${i}.html`);
+    for (var i = 0; i < config.count; i++) {
+      urls.push(`${config.baseUrl}${config.startIndex + i}.html`);
     }
   }
 
