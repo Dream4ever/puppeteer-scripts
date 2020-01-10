@@ -1,6 +1,6 @@
-var fs = require('fs');
-var puppeteer = require('puppeteer');
-var config = require('./config/config');
+let fs = require('fs')
+let puppeteer = require('puppeteer')
+let config = require('./config/config')
 
 const initBrowserConfig = () => {
   let config = {
@@ -15,145 +15,207 @@ const initBrowserConfig = () => {
   return config
 }
 
+const launchBrowser = async () => {
+  const browserConfig = initBrowserConfig()
+  let browser = await puppeteer.launch(browserConfig)
+
+  console.log(`\n已启动浏览器\n`)
+
+  return browser
+}
+
+const createNewPage = async (browser) => {
+  const chromeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
+
+  let page = await browser.newPage()
+  page.setUserAgent(chromeUserAgent)
+
+  console.log(`已新建标签页\n`)
+
+  return page
+}
+
 const concatUrlFromConfig = () => {
-  let url = []
+  let urls = []
 
   if (config.array && config.array.length > 0) {
     config.array.forEach(ele => {
       urls.push(`${config.baseUrl}${ele}${config.fileExtension}`);
     });
   } else if (config.startIndex) {
-    for (var i = 0; i < config.count; i++) {
+    for (let i = 0; i < config.count; i++) {
       urls.push(`${config.baseUrl}${config.startIndex + i}.${config.fileExtension}`);
     }
   }
 
-  return url
+  return urls
 }
 
-(async () => {
+//
+// 以上为启动浏览器并拼装URL数据的代码
+//
 
-  /* 设置浏览器启动参数 */
-  const browserConfig = initBrowserConfig()
-  let browser = await puppeteer.launch(browserConfig);
-  console.log(`\n已启动浏览器\n`);
+const typeUrlText = async (page, url) => {
+  console.log('01. 即将输入网址')
 
-  /* 设置新建标签页的参数 */
-  var page = await browser.newPage();
-  const chromeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
-  page.setUserAgent(chromeUserAgent)
-  console.log(`已新建标签页\n`);
+  // TODO: 想用 Promise.all 把下面这些语句统一起来一次执行
+  // 就会卡在 click 函数上，但是报错却说 waitForNavigation 超时
+  await page.waitForSelector('#url_content')
 
-  /* 从配置文件中读取需生成二维码的URL数组 */
-  var urls = concatUrlFromConfig()
+  // 草料网现在增加了检测机制，必须点击输入框之后才能模拟输入文字
+  // delay 设置为 50，是为了模拟正常速度，降低草料网 API 调用频率
+  await page.tap('#url_content')
+  await page.type('#url_content', url, { delay: 50, })
 
-  /* 逐个生成二维码 */
-  for (var idx = 0; idx < urls.length; idx++) {
-    await page.goto('https://cli.im/url');
+  await page.waitForSelector('#click-create')
+  await page.click('#click-create')
 
-    await page.waitForSelector('#url_content');
-    console.log('01. 页面加载完毕');
+  // 输入网址生成二维码图片后，URL会变化，所以这一行不能省略
+  await page.waitForNavigation()
+}
 
-    // 草料网现在增加了检测机制，必须点击输入框之后才能模拟输入文字
-    await page.tap('#url_content');
-    await page.type('#url_content', urls[idx], { delay: 50, }
-    );
+const setDataLevel = async (page) => {
+  // 设置二维码容错级别为最低的7%
+  await page.waitForSelector('li.col-md-3.col-sm-3.col-xs-3.first')
+  await page.click('li.col-md-3.col-sm-3.col-xs-3.first')
+  await page.waitForSelector('div#level')
+  await page.click('div#level')
+  await page.waitForSelector('a.dropdown-item[data-level="L"]')
+  await page.click('a.dropdown-item[data-level="L"]')
 
-    await page.waitForSelector('#click-create');
-    await page.click('#click-create');
+  console.log('02. 二维码图片生成中')
+}
 
-    // 输入网址生成二维码图片后，URL会变化，所以这一行不能省略
-    await page.waitForNavigation();
+const getImageSource = async (page) => {
+  let qrcode = await page.$('#qrimage')
+  console.log('03. 二维码图片已生成')
 
-    // 设置二维码容错级别为最低的7%
-    await page.waitForSelector('li.col-md-3.col-sm-3.col-xs-3.first');
-    await page.click('li.col-md-3.col-sm-3.col-xs-3.first');
-    await page.waitForSelector('div#level')
-    await page.click('div#level')
-    await page.waitForSelector('a.dropdown-item[data-level="L"]')
-    await page.click('a.dropdown-item[data-level="L"]')
+  // 在这里需等待一会儿，才能正常获取到图片元素的 src 属性
+  // 否则获取到的只是图片的 base64 值
+  await page.waitFor(1000)
+  let imgSrc = await page.evaluate(() => {
+    return document.querySelector('#qrimage').getAttribute('src')
+  });
+  await page.waitFor(1000)
+  console.log(imgSrc)
+  let viewSource = await page.goto(`https:${imgSrc}`)
+  return viewSource
+}
 
-    console.log('02. 二维码图片生成中');
+const saveImage = async (idx, viewSource) => {
+  let imgName = ''
+  let imgPath = ''
 
-    var qrcode = await page.$('#qrimage');
-    console.log('03. 二维码图片已生成');
-
-    // 在这里需等待1秒，才能正常获取到图片元素的src
-    // 否则获取到的是图片的base64值
-    await page.waitFor(1000);
-    let imgSrc = await page.evaluate(() => {
-      return document.querySelector('#qrimage').getAttribute('src')
-    });
-    await page.waitFor(1000);
-    console.log(imgSrc);
-    let viewSource = await page.goto(`https:${imgSrc}`);
-
-    // 二维码图片非连续编号
-    if (config.array && config.array.length > 0) {
-      fs.writeFile(`img/${config.array[idx]}.png`, await viewSource.buffer(), function (err) {
-        if (err) {
-          return console.log(err);
-        }
-      })
-      console.log(`04. 二维码图片 ${config.array[idx]} 已保存\n`);
-    }
-    // 二维码图片连续编号
-    else if (config.startIndex) {
-      fs.writeFile(`img/${config.startIndex + idx}.png`, await viewSource.buffer(), function (err) {
-        if (err) {
-          return console.log(err);
-        }
-      })
-      console.log(`04. 二维码图片 ${config.startIndex + idx} 已保存\n`);
-    }
-    await page.waitFor(1000);
-  };
-
-  // 检查二维码
-
-  let allOK = true;
-  for (var idx = 0; idx < urls.length; idx++) {
-    await page.goto('https://cli.im/deqr', {
-      waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
-    });
-    if (idx === 0) {
-      console.log('二维码扫描页面已完全加载\n')
-    }
-
-    console.log(`第${idx + 1}个二维码检查中……\n`);
-
-    await page.waitForSelector('div.deqr-icon.deqr-icon-upload');
-    let [fileChooser] = await Promise.all([
-      page.waitForFileChooser(),
-      page.click('div.deqr-icon.deqr-icon-upload'),
-    ]);
-    await page.waitFor(1000);
-    let imgName = '';
-    if (config.array && config.array.length > 0) {
-      imgName = `img/${config.array[idx]}.png`
-    } else {
-      imgName = `img/${config.startIndex + idx}.png`
-    }
-    await fileChooser.accept([imgName]);
-    await page.waitFor(1000);
-
-    const innerText = await page.evaluate(() => document.querySelector('div.result').innerText);
-
-    if (innerText !== urls[idx]) {
-      allOK = false;
-      console.log('二维码图片内容有误');
-      console.log(`innerText: ${innerText}`)
-      console.log(urls[idx])
-      console.log('请为上面的网址重新生成二维码图片并再次检查');
-      console.log('\n');
-    }
+  // 二维码图片非连续编号
+  if (config.array && config.array.length > 0) {
+    imgName = config.array[idx]
+    imgPath = `img/${config.array[idx]}.png`
   }
-  console.log('二维码图片全部检查完毕');
+  // 二维码图片连续编号
+  else if (config.startIndex) {
+    imgName = config.startIndex + idx
+    imgPath = `img/${config.startIndex + idx}.png`
+  }
+
+  fs.writeFile(imgPath, await viewSource.buffer(), function (err) {
+    if (err) {
+      return console.log(err)
+    }
+  })
+  console.log(`04. 二维码图片 ${imgName} 已保存\n`)
+}
+
+const generateQrcodes = async (urls, page) => {
+  for (let idx = 0; idx < urls.length; idx++) {
+    await page.goto('https://cli.im/url')
+    await typeUrlText(page, urls[idx])
+    await setDataLevel(page)
+    let viewSource = await getImageSource(page)
+    saveImage(idx, viewSource)
+    await page.waitFor(1000)
+  }
+}
+
+//
+// 以上为生成二维码的代码
+//
+
+const navToDeqrPage = async (idx, page) => {
+  await page.goto('https://cli.im/deqr', {
+    waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
+  });
+  if (idx === 0) {
+    console.log('二维码扫描页面已完全加载\n')
+  }
+
+  console.log(`第${idx + 1}个二维码检查中……\n`)
+}
+
+const uploadImage = async (page, idx) => {
+  await page.waitForSelector('div.deqr-icon.deqr-icon-upload')
+
+  let [fileChooser] = await Promise.all([
+    page.waitForFileChooser(),
+    page.click('div.deqr-icon.deqr-icon-upload'),
+  ])
+  await page.waitFor(1000)
+
+  let imgName = ''
+  if (config.array && config.array.length > 0) {
+    imgName = `img/${config.array[idx]}.png`
+  } else {
+    imgName = `img/${config.startIndex + idx}.png`
+  }
+
+  await fileChooser.accept([imgName])
+  await page.waitFor(1000)
+}
+
+const compareQrcodeWithUrl = async (page, url) => {
+  const innerText = await page.evaluate(() => document.querySelector('div.result').innerText);
+
+  if (innerText !== url) {
+    allOK = false;
+    console.log('二维码图片内容有误');
+    console.log(`innerText: ${innerText}`)
+    console.log(url)
+    console.log('请为上面的网址重新生成二维码图片并再次检查');
+    console.log('\n');
+  }
+}
+
+const checkQrcodes = async (urls, page) => {
+  let allOK = true
+  for (let idx = 0; idx < urls.length; idx++) {
+    await navToDeqrPage(idx, page)
+    await uploadImage(page, idx)
+    await compareQrcodeWithUrl(page, urls[idx])
+  }
   if (allOK) {
-    console.log('二维码图片全部正常可用 :)')
+    console.log('二维码图片全部正常可用')
+  } else {
+    console.log('请检查出错的二维码')
   }
+}
 
-  await browser.close();
-  console.log(`\n浏览器已关闭`);
+//
+// 以上为检查二维码的代码
+//
 
-})();
+const closeBrowser = async (browser) => {
+  await browser.close()
+  console.log(`\n浏览器已关闭`)
+}
+
+//
+// 以上为收尾的代码
+//
+
+(async () => {
+  let browser = await launchBrowser()
+  let page = await createNewPage(browser)
+  let urls = concatUrlFromConfig()
+  await generateQrcodes(urls, page)
+  await checkQrcodes(urls, page)
+  await closeBrowser(browser)
+})()
