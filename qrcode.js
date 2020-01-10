@@ -4,57 +4,20 @@ var config = require('./config/config');
 
 const initBrowserConfig = () => {
   let config = {
-    defaultViewport: null,
-    // defaultViewport: {
-    //   width: 1920,
-    //   height: 935,
-    // },
-    // chrome: { x: 0, y: 74 }, // comes from config in reality
-    headless: true,
+    defaultViewport: {
+      width: 1920,
+      height: 935,
+    },
+    headless: false,
     devtools: false,
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
   }
-
-  // const windowSize = `\
-  //   --window-size=\
-  //   ${config.width + config.chrome.x},\
-  //   ${config.height + config.chrome.y}`
-
-  // 设置启动后的窗口尺寸
-  // https://github.com/puppeteer/puppeteer/issues/1183#issuecomment-366220736  
-  // config.args = []
-  // config.args.push(windowSize)
 
   return config
 }
 
-(async () => {
+const concatUrlFromConfig = () => {
+  let url = []
 
-  /* 设置浏览器启动参数 */
-  const browserConfig = initBrowserConfig()
-
-  var browser = await puppeteer.launch(browserConfig);
-
-  console.log(`\n已启动浏览器\n`);
-
-
-  /* 设置新建标签页的参数 */
-  var page = await browser.newPage();
-
-  await page.emulateMedia("screen"); // <- optional but super useful
-
-  // 设置启动后的窗口尺寸
-  // https://github.com/puppeteer/puppeteer/issues/1183#issuecomment-366220736
-  await page.setViewport({
-    width: 1920,
-    height: 935,
-  });
-  // await page.setUserAgent(browserConfig.userAgent);
-  // await page.bringToFront();
-  console.log(`已新建标签页\n`);
-
-  /* 从配置文件中读取需生成二维码的URL数组 */
-  var urls = [];
   if (config.array && config.array.length > 0) {
     config.array.forEach(ele => {
       urls.push(`${config.baseUrl}${ele}${config.fileExtension}`);
@@ -64,6 +27,25 @@ const initBrowserConfig = () => {
       urls.push(`${config.baseUrl}${config.startIndex + i}.${config.fileExtension}`);
     }
   }
+
+  return url
+}
+
+(async () => {
+
+  /* 设置浏览器启动参数 */
+  const browserConfig = initBrowserConfig()
+  let browser = await puppeteer.launch(browserConfig);
+  console.log(`\n已启动浏览器\n`);
+
+  /* 设置新建标签页的参数 */
+  var page = await browser.newPage();
+  const chromeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
+  page.setUserAgent(chromeUserAgent)
+  console.log(`已新建标签页\n`);
+
+  /* 从配置文件中读取需生成二维码的URL数组 */
+  var urls = concatUrlFromConfig()
 
   /* 逐个生成二维码 */
   for (var idx = 0; idx < urls.length; idx++) {
@@ -128,25 +110,34 @@ const initBrowserConfig = () => {
   };
 
   // 检查二维码
-  await page.goto('https://cli.im/deqr', {
-    waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
-  });
-  console.log('二维码扫描页面已完全加载\n');
 
   let allOK = true;
   for (var idx = 0; idx < urls.length; idx++) {
+    await page.goto('https://cli.im/deqr', {
+      waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
+    });
+    if (idx === 0) {
+      console.log('二维码扫描页面已完全加载\n')
+    }
+
     console.log(`第${idx + 1}个二维码检查中……\n`);
 
-    await page.waitForSelector('input#filedatacode');
-    const [fileChooser] = await Promise.all([
+    await page.waitForSelector('div.deqr-icon.deqr-icon-upload');
+    let [fileChooser] = await Promise.all([
       page.waitForFileChooser(),
-      page.click('input#filedatacode'),
+      page.click('div.deqr-icon.deqr-icon-upload'),
     ]);
-    await page.waitFor(2000);
-    await fileChooser.accept([`img/${config.startIndex + idx}.png`]);
-    await page.waitFor(2000);
+    await page.waitFor(1000);
+    let imgName = '';
+    if (config.array && config.array.length > 0) {
+      imgName = `img/${config.array[idx]}.png`
+    } else {
+      imgName = `img/${config.startIndex + idx}.png`
+    }
+    await fileChooser.accept([imgName]);
+    await page.waitFor(1000);
 
-    const innerText = await page.evaluate(() => document.querySelector('#deqrresult').innerText);
+    const innerText = await page.evaluate(() => document.querySelector('div.result').innerText);
 
     if (innerText !== urls[idx]) {
       allOK = false;
