@@ -2,35 +2,55 @@ var fs = require('fs');
 var puppeteer = require('puppeteer');
 var config = require('./config/config');
 
+const initBrowserConfig = () => {
+  let config = {
+    defaultViewport: null,
+    // defaultViewport: {
+    //   width: 1920,
+    //   height: 935,
+    // },
+    // chrome: { x: 0, y: 74 }, // comes from config in reality
+    headless: true,
+    devtools: false,
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
+  }
+
+  // const windowSize = `\
+  //   --window-size=\
+  //   ${config.width + config.chrome.x},\
+  //   ${config.height + config.chrome.y}`
+
+  // 设置启动后的窗口尺寸
+  // https://github.com/puppeteer/puppeteer/issues/1183#issuecomment-366220736  
+  // config.args = []
+  // config.args.push(windowSize)
+
+  return config
+}
+
 (async () => {
 
   /* 设置浏览器启动参数 */
-  const width = 1920;
-  const height = 935;
-  const chrome = { x: 0, y: 74 };
+  const browserConfig = initBrowserConfig()
 
-  // 设置启动后的窗口尺寸
-  // https://github.com/GoogleChrome/puppeteer/issues/1183
-  let args = [];
-  args.push(`--window-size=${width + chrome.x},${height + chrome.y}`);
-
-  var browser = await puppeteer.launch({
-    headless: true,
-    args,
-    // devtools: true,
-    // slowMo: 250,
-  });
+  var browser = await puppeteer.launch(browserConfig);
 
   console.log(`\n已启动浏览器\n`);
 
 
   /* 设置新建标签页的参数 */
   var page = await browser.newPage();
+
+  await page.emulateMedia("screen"); // <- optional but super useful
+
+  // 设置启动后的窗口尺寸
+  // https://github.com/puppeteer/puppeteer/issues/1183#issuecomment-366220736
   await page.setViewport({
-    width,
-    height,
+    width: 1920,
+    height: 935,
   });
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
+  // await page.setUserAgent(browserConfig.userAgent);
+  // await page.bringToFront();
   console.log(`已新建标签页\n`);
 
   /* 从配置文件中读取需生成二维码的URL数组 */
