@@ -37,11 +37,11 @@ var config = require('./config/config');
   var urls = [];
   if (config.array && config.array.length > 0) {
     config.array.forEach(ele => {
-      urls.push(`${config.baseUrl}${ele}.html`);
+      urls.push(`${config.baseUrl}${ele}${config.fileExtension}`);
     });
   } else if (config.startIndex) {
     for (var i = 0; i < config.count; i++) {
-      urls.push(`${config.baseUrl}${config.startIndex + i}.html`);
+      urls.push(`${config.baseUrl}${config.startIndex + i}.${config.fileExtension}`);
     }
   }
 
@@ -88,7 +88,7 @@ var config = require('./config/config');
 
     // 二维码图片非连续编号
     if (config.array && config.array.length > 0) {
-      fs.writeFile(`img/${config.startIndex + idx}.png`, await viewSource.buffer(), function (err) {
+      fs.writeFile(`img/${config.array[idx]}.png`, await viewSource.buffer(), function (err) {
         if (err) {
           return console.log(err);
         }
