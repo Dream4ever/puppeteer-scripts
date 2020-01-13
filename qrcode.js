@@ -2,6 +2,8 @@ let fs = require('fs')
 let puppeteer = require('puppeteer')
 let config = require('./config/config')
 
+// 启动浏览器并拼装二维码所对应的URL数据
+
 const initBrowserConfig = () => {
   let config = {
     defaultViewport: {
@@ -51,9 +53,7 @@ const concatUrlFromConfig = () => {
   return urls
 }
 
-//
-// 以上为启动浏览器并拼装URL数据的代码
-//
+// 生成二维码
 
 const typeUrlText = async (page, url) => {
   console.log('01. 即将输入网址')
@@ -136,9 +136,7 @@ const generateQrcodes = async (urls, page) => {
   }
 }
 
-//
-// 以上为生成二维码的代码
-//
+// 检查二维码
 
 const navToDeqrPage = async (idx, page) => {
   await page.goto('https://cli.im/deqr', {
@@ -198,18 +196,12 @@ const checkQrcodes = async (urls, page) => {
   }
 }
 
-//
-// 以上为检查二维码的代码
-//
+// 收尾
 
 const closeBrowser = async (browser) => {
   await browser.close()
   console.log(`\n浏览器已关闭`)
 }
-
-//
-// 以上为收尾的代码
-//
 
 (async () => {
   let browser = await launchBrowser()
