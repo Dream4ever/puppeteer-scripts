@@ -46,7 +46,7 @@ const concatUrlFromConfig = () => {
     });
   } else if (config.startIndex) {
     for (let i = 0; i < config.count; i++) {
-      urls.push(`${config.baseUrl}${config.startIndex + i}.${config.fileExtension}`);
+      urls.push(`${config.baseUrl}${config.startIndex + i}${config.fileExtension}`);
     }
   }
 
