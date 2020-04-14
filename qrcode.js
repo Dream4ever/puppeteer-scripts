@@ -177,8 +177,12 @@ const compareQrcodeWithUrl = async (page, url) => {
     console.log('二维码图片内容有误');
     console.log(`innerText: ${innerText}`)
     console.log(url)
-    console.log('请为上面的网址重新生成二维码图片并再次检查');
-    console.log('\n');
+    console.log('请为上面的网址重新生成二维码图片并再次检查')
+    console.log('\n')
+    return false
+  } else {
+    console.log('二维码正确\n')
+    return true
   }
 }
 
@@ -187,7 +191,10 @@ const checkQrcodes = async (urls, page) => {
   for (let idx = 0; idx < urls.length; idx++) {
     await navToDeqrPage(idx, page)
     await uploadImage(page, idx)
-    await compareQrcodeWithUrl(page, urls[idx])
+    const qrcodeOk = await compareQrcodeWithUrl(page, urls[idx])
+    if (!qrcodeOk) {
+      allOK = false
+    }
   }
   if (allOK) {
     console.log('二维码图片全部正常可用')
