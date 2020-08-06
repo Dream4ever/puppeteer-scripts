@@ -65,7 +65,7 @@ const typeUrlText = async (page, url) => {
   // 草料网现在增加了检测机制，必须点击输入框之后才能模拟输入文字
   // delay 设置为 50，是为了模拟正常速度，降低草料网 API 调用频率
   await page.tap('#url_content')
-  await page.type('#url_content', url, { delay: 50, })
+  await page.type('#url_content', url, { delay: 15, })
 
   await page.waitForSelector('#click-create')
   await page.click('#click-create')
@@ -76,10 +76,6 @@ const typeUrlText = async (page, url) => {
 
 // 设置二维码容错级别为最高的 30%
 const setDataLevel = async (page) => {
-  // 点击生成的二维码图片下方的“设置按钮”
-  await page.waitForSelector('div.qr-style-tab-item-title.tab-other-setting')
-  await page.click('div.qr-style-tab-item-title.tab-other-setting')
-
   // 点击容错设置的下拉菜单
   await page.waitForSelector('div#level')
   await page.click('div#level')
