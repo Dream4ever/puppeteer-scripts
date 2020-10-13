@@ -74,15 +74,11 @@ const typeUrlText = async (page, url) => {
   await page.waitForNavigation()
 }
 
-// 设置二维码容错级别为最高的 30%
+// 设置二维码容错级别为 7%
 const setDataLevel = async (page) => {
-  // 点击容错设置的下拉菜单
-  await page.waitForSelector('div#level')
-  await page.click('div#level')
-
-  // 选择 7% 的容错级别
-  await page.waitForSelector('a.dropdown-item[data-level="H"]')
-  await page.click('a.dropdown-item[data-level="H"]')
+  // 点击选择 7% 的容错级别
+  await page.waitForSelector('#level>label>input[value="L"]')
+  await page.click('#level>label>input[value="L"]')
 
   console.log('02. 二维码图片生成中')
 }
