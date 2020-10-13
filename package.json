@@ -13,6 +13,6 @@
   "author": "HeWei",
   "license": "ISC",
   "dependencies": {
-    "puppeteer": "1.20.0"
+    "puppeteer": "5.3.1"
   }
 }
