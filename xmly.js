@@ -70,7 +70,7 @@ var fs = require('fs');
       totalCount++;
 
       // 这里无需等待，否则资源爬取反而经常会超时失败
-      // await page.waitFor(5000);
+      // await page.waitForTimeout(5000);
 
       line += `${pageIndex},${soundIndex},${totalCount},${response.url()},${soundTitle}\n`;
     }

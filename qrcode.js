@@ -89,11 +89,11 @@ const getImageSource = async (page) => {
 
   // 在这里需等待一会儿，才能正常获取到图片元素的 src 属性
   // 否则获取到的只是图片的 base64 值
-  await page.waitFor(1000)
+  await page.waitForTimeout(1000)
   let imgSrc = await page.evaluate(() => {
     return document.querySelector('#qrimage').getAttribute('src')
   });
-  await page.waitFor(1000)
+  await page.waitForTimeout(1000)
   console.log(imgSrc)
   let viewSource = await page.goto(`https:${imgSrc}`)
   return viewSource
@@ -129,7 +129,7 @@ const generateQrcodes = async (urls, page) => {
     await setDataLevel(page)
     let viewSource = await getImageSource(page)
     saveImage(idx, viewSource)
-    await page.waitFor(1000)
+    await page.waitForTimeout(1000)
   }
 }
 
@@ -153,7 +153,7 @@ const uploadImage = async (page, idx) => {
     page.waitForFileChooser(),
     page.click('div.deqr-icon.deqr-icon-upload'),
   ])
-  await page.waitFor(1000)
+  await page.waitForTimeout(1000)
 
   let imgName = ''
   if (config.array && config.array.length > 0) {
@@ -163,7 +163,7 @@ const uploadImage = async (page, idx) => {
   }
 
   await fileChooser.accept([imgName])
-  await page.waitFor(1000)
+  await page.waitForTimeout(1000)
 }
 
 const compareQrcodeWithUrl = async (page, url) => {
