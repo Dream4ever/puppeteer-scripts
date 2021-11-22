@@ -77,13 +77,28 @@ const typeUrlText = async (page, url) => {
 // 设置二维码容错级别为 7%
 const setDataLevel = async (page) => {
   // 点击选择 7% 的容错级别
-  await page.waitForSelector('#level>label>input[value="L"]')
-  await page.click('#level>label>input[value="L"]')
+  await page.waitForSelector('#level > button')
+  await page.click('#level > button')
 
-  console.log('02. 二维码图片生成中')
+  await page.waitForSelector('#level > div > a[data-level="L"]')
+  await page.click('#level > div > a[data-level="L"]')
+}
+
+// 设置二维码尺寸为 260px
+const setImageSize = async (page) => {
+  await page.waitForSelector('#size-value')
+  await page.evaluate(() => document.getElementById("size-value").value = "")
+  await page.tap('#size-value')
+  await page.type('#size-value', '260', { delay: 10 })
 }
 
 const getImageSource = async (page) => {
+  console.log('02. 二维码图片生成中')
+
+  // 点击其他地方，使修改后的二维码图片尺寸生效
+  await page.waitForSelector('div.qrcomplete-result-box')
+  await page.click('div.qrcomplete-result-box')
+
   let qrcode = await page.$('#qrimage')
   console.log('03. 二维码图片已生成')
 
@@ -103,16 +118,8 @@ const saveImage = async (idx, viewSource) => {
   let imgName = ''
   let imgPath = ''
 
-  // 二维码图片非连续编号
-  if (config.array && config.array.length > 0) {
-    imgName = config.array[idx]
-    imgPath = `img/${config.array[idx]}.png`
-  }
-  // 二维码图片连续编号
-  else if (config.startIndex) {
-    imgName = config.startIndex + idx
-    imgPath = `img/${config.startIndex + idx}.png`
-  }
+  imgName = config.startIndex + idx
+  imgPath = `img/${config.startIndex + idx}.png`
 
   fs.writeFile(imgPath, await viewSource.buffer(), function (err) {
     if (err) {
@@ -127,6 +134,7 @@ const generateQrcodes = async (urls, page) => {
     await page.goto('https://cli.im/url')
     await typeUrlText(page, urls[idx])
     await setDataLevel(page)
+    await setImageSize(page)
     let viewSource = await getImageSource(page)
     saveImage(idx, viewSource)
     await page.waitForTimeout(1000)
