@@ -86,6 +86,12 @@ const setDataLevel = async (page) => {
 
 // 设置二维码尺寸为 260px
 const setImageSize = async (page) => {
+  await page.waitForSelector('#size-btn')
+  await page.click('#size-btn')
+  
+  await page.waitForSelector('#size-dropdown a[data-size="auto"]')
+  await page.click('#size-dropdown a[data-size="auto"]')
+
   await page.waitForSelector('#size-value')
   await page.evaluate(() => document.getElementById("size-value").value = "")
   await page.tap('#size-value')
