@@ -63,7 +63,7 @@ const typeUrlText = async (page, url) => {
   await page.waitForSelector('#url_content')
 
   // 草料网现在增加了检测机制，必须点击输入框之后才能模拟输入文字
-  // delay 设置为 50，是为了模拟正常速度，降低草料网 API 调用频率
+  // 设置 delay 参数，是为了模拟正常速度，降低草料网 API 调用频率
   await page.tap('#url_content')
   await page.type('#url_content', url, { delay: 15, })
 
